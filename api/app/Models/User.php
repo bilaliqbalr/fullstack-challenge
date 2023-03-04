@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,6 +20,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'latitude',
+        'longitude'
     ];
 
     /**
@@ -39,4 +42,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected $appends = [
+        'forecast'
+    ];
+
+    public function forecast() : Attribute {
+        return new Attribute(
+            fn ($value) => new \App\Services\Weather($this)
+        );
+    }
+
+    public function forecastHistory() {
+        return $this->hasMany(Forecast::class, ['latitude', 'longitude'], ['latitude', 'longitude']);
+    }
 }
