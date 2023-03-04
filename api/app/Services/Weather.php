@@ -67,27 +67,41 @@ class Weather
     public static function getForecastByCoords($lat, $long) : array {
         // Will return cached data, in case another user have same latitude, longitude
         // to avoid multiple API requests
-        if ($data = self::getCache($lat, $long)) {
+        $data = self::getCache($lat, $long);
+        if ($data !== false) {
             return $data;
         }
 
-        $response = Http::acceptJson()->get(self::getPointEndpoint($lat, $long));
+        try {
+            $response = Http::acceptJson()->get(self::getPointEndpoint($lat, $long));
+        } catch (\Exception $e) {
+            throw new WeatherHttpException($e->getMessage());
+        }
 
         if ($response->successful()) {
             $forecastUrl = $response->json('properties.forecast');
-            $forecast = self::getForecast($forecastUrl);
+            // Avoid forecast having null URL
+            if (is_null($forecastUrl)) {
+                $forecast = [];
+            } else {
+                $forecast = self::getForecast($forecastUrl);
+            }
 
             // Caching forecast data for later use to avoid multiple API calls
-            Cache::put(
-                self::getCacheKey($lat, $long),
-                $forecast,
-                60 * 60
-            );
+            Cache::put(self::getCacheKey($lat, $long), $forecast, 60 * 60);
 
             return $forecast;
 
         } else {
-            throw new WeatherHttpException("Error getting response from point endpoint");
+            if ($response->json('title') == "Unexpected Problem") {
+                // Avoid making API calls in case of invalid coordinates
+                // Will receive this message whenever it is invalid coordinates
+                Cache::put(self::getCacheKey($lat, $long), [], 60 * 60);
+                return [];
+
+            } else {
+                throw new WeatherHttpException("Error getting response from point endpoint");
+            }
         }
     }
 
@@ -97,10 +111,14 @@ class Weather
      * @throws WeatherHttpException
      */
     public static function getForecast($forecastUrl) : array {
-        $forecastResp = Http::acceptJson()->get($forecastUrl);
+        try {
+            $forecastResp = Http::acceptJson()->get($forecastUrl);
+        } catch (\Exception $e) {
+            throw new WeatherHttpException($e->getMessage());
+        }
 
         if ($forecastResp->successful()) {
-            return $forecastResp->json('properties.forecast');
+            return $forecastResp->json('properties.periods');
 
         } else {
             throw new WeatherHttpException("Error getting response from forecast endpoint");

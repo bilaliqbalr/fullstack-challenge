@@ -49,7 +49,7 @@ class User extends Authenticatable
 
     public function forecast() : Attribute {
         return new Attribute(
-            fn ($value) => new \App\Services\Weather($this)
+            fn ($value) => (new \App\Services\Weather($this))->get()
         );
     }
 
