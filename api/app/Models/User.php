@@ -57,4 +57,12 @@ class User extends Authenticatable
     public function forecastHistory() {
         return $this->hasMany(Forecast::class, ['latitude', 'longitude'], ['latitude', 'longitude']);
     }
+
+    public function scopePaginate($query, $perPage = 10, $page = null) {
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        $paginator->appends(request()->query());
+
+        return $paginator;
+    }
+
 }
