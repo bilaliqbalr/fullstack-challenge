@@ -121,9 +121,9 @@ class WeatherForecastTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200)
-            ->assertJsonCount(3, 'users')
-            ->assertJsonPath('users.0.latitude', '38.8951')
-            ->assertJsonPath('users.1.latitude', '26.9391')
-            ->assertJsonPath('users.2.latitude', '25.7473');
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('data.0.latitude', '38.8951')
+            ->assertJsonPath('data.1.latitude', '26.9391')
+            ->assertJsonPath('data.2.latitude', '25.7473');
     }
 }
