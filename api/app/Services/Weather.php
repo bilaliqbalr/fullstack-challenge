@@ -20,11 +20,11 @@ class Weather
     }
 
     public function get() : ?array {
-        try {
-            return $this->getForecastByCoords($this->user->latitude, $this->user->longitude);
-
-        } catch (WeatherHttpException $e) {
-            return null;
+        $data = self::getCache($this->user->latitude, $this->user->longitude);
+        if (!is_array($data)) {
+            return [];
+        } else {
+            return $data;
         }
     }
 
@@ -32,11 +32,16 @@ class Weather
      * @throws WeatherHttpException
      */
     public function save() {
+        $hasCache = self::getCache($this->user->latitude, $this->user->longitude);
+
         $forecast = $this->getForecastByCoords($this->user->latitude, $this->user->longitude);
 
-        $this->user->forecastHistory()->update([
-            'forecast' => $forecast
-        ]);
+        if ((!$hasCache || $hasCache == []) && !empty($forecast)) {
+            // Only create history if won't have cache, means it will be new data from API
+            $this->user->forecastHistory()->create([
+                'forecast' => $forecast
+            ]);
+        }
     }
 
     public static function getCacheKey($lat, $long) : string {

@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('forecasts', function (Blueprint $table) {
             $table->id();
-            $table->decimal('latitude', 10, 8);
-            $table->decimal('longitude', 11, 8);
+            $table->decimal('latitude', 10, 4);
+            $table->decimal('longitude', 11, 4);
             $table->json('forecast');
             $table->timestamps();
+
+            $table->index(['latitude', 'longitude'], 'coordinates');
         });
     }
 

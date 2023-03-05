@@ -37,6 +37,7 @@ class WeatherForecast extends Command
                 $retries = 1;
                 do {
                     $status = true;
+                    $this->line("Getting API data for user {$user->id} & retry #$retries");
 
                     try {
                         (new Weather($user))->save();
@@ -45,11 +46,13 @@ class WeatherForecast extends Command
                         $status = false;
                         $retries++;
 
+                        $this->line("API failed");
+
                         // Retrying call after few seconds in case of error
                         sleep(mt_rand(1, 5));
                     }
 
-                } while ($status === false && $retries >= 3);
+                } while ($status === false && $retries <= 3);
             });
         });
     }
